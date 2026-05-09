@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 AI & 이미지 도구 모음</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #eaf5f3; /* 기존 도구들과 동일한 민트 배경 */
+            font-family: 'Noto Sans KR', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 50px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #1e293b;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            letter-spacing: -1px;
+        }
+
+        p {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .menu-link {
+            display: block;
+            padding: 18px 20px;
+            background-color: #4b86f7;
+            color: white;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(75, 134, 247, 0.2);
+        }
+
+        .menu-link:hover {
+            background-color: #3b76e7;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(75, 134, 247, 0.3);
+        }
+
+        /* 각 버튼 색상을 다르게 주고 싶다면 아래 주석을 해제하고 사용하세요 */
+        /*
+        .menu-link:nth-child(1) { background-color: #6366f1; }
+        .menu-link:nth-child(2) { background-color: #4ade80; color: #166534; }
+        .menu-link:nth-child(3) { background-color: #f43f5e; }
+        */
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎨 나의 도구 모음</h1>
+        <p>원하는 기능을 클릭하여 실행하세요.</p>
+
+        <div class="menu-list">
+            <a href="1. 손글씨(숫자)인식.html" class="menu-link" target="_blank">1. 손글씨(숫자)인식</a>
+            <a href="2. 픽셀 에디터 & RGB 행렬 추출1.html" class="menu-link" target="_blank">2. 픽셀 에디터 & RGB 행렬 추출</a>
+            <a href="3. 이미지 블렌더.html" class="menu-link" target="_blank">3. 이미지 블렌더</a>
+        </div>
+    </div>
+
+</body>
+</html>
