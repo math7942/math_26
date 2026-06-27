@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이미지 크기 변환기</title>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .input-group input {
+            width: 45%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #preview {
+            max-width: 100%;
+            margin-top: 20px;
+            border-radius: 6px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🖼️ 이미지 크기 변환기</h2>
+        
+        <input type="file" id="imageInput" accept="image/*">
+        
+        <div class="input-group">
+            <input type="number" id="widthInput" placeholder="가로 크기 (px)">
+            <input type="number" id="heightInput" placeholder="세로 크기 (px)">
+        </div>
+        
+        <button id="downloadBtn">크기 변경 및 다운로드</button>
+        
+        <img id="preview" alt="미리보기">
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const widthInput = document.getElementById('widthInput');
+        const heightInput = document.getElementById('heightInput');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const preview = document.getElementById('preview');
+
+        let originalFile = null;
+        let imgElement = new Image();
+
+        // 1. 이미지를 업로드했을 때
+        imageInput.addEventListener('change', (e) => {
+            originalFile = e.target.files[0];
+            if (originalFile) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    imgElement.src = event.target.result;
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                    
+                    // 원본 이미지의 가로/세로 크기를 입력창에 기본으로 세팅
+                    imgElement.onload = () => {
+                        widthInput.value = imgElement.width;
+                        heightInput.value = imgElement.height;
+                    }
+                };
+                reader.readAsDataURL(originalFile);
+            }
+        });
+
+        // 2. 다운로드 버튼을 눌렀을 때
+        downloadBtn.addEventListener('click', () => {
+            if (!originalFile) {
+                alert('이미지를 먼저 업로드해주세요!');
+                return;
+            }
+
+            const width = parseInt(widthInput.value);
+            const height = parseInt(heightInput.value);
+
+            if (!width || !height) {
+                alert('가로와 세로 크기를 모두 입력해주세요!');
+                return;
+            }
+
+            // Canvas를 사용해 이미지 크기 변경
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(imgElement, 0, 0, width, height);
+
+            // 요청한 파일명 생성 로직 (원본이름_가로x세로.확장자)
+            const lastDotIndex = originalFile.name.lastIndexOf('.');
+            const fileName = originalFile.name.substring(0, lastDotIndex); // 확장자 제외한 이름
+            const fileExtension = originalFile.name.substring(lastDotIndex); // 확장자 (.jpg 등)
+            
+            const newFileName = `${fileName}_${width}x${height}${fileExtension}`;
+
+            // 다운로드 링크 생성 및 자동 클릭
+            const downloadLink = document.createElement('a');
+            downloadLink.download = newFileName;
+            // 원본 파일의 포맷(mime type)을 유지하면서 화질을 최대로 설정
+            downloadLink.href = canvas.toDataURL(originalFile.type, 1.0); 
+            
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        });
+    </script>
+
+</body>
+</html>
