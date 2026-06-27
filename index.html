@@ -18,6 +18,17 @@
             padding: 20px;
         }
 
+        /* 두 상자를 가로로 묶어주는 래퍼(Wrapper) 스타일 추가 */
+        .tools-wrapper {
+            display: flex;
+            gap: 40px; /* 두 상자 사이의 간격 */
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap; /* 화면이 좁아지면 자동으로 아래로 내려가게 함 */
+            width: 100%;
+            max-width: 1100px; /* 너무 넓어지지 않게 최대 너비 설정 */
+        }
+
         .container {
             background: white;
             padding: 50px 40px;
@@ -26,6 +37,8 @@
             text-align: center;
             max-width: 500px;
             width: 100%;
+            /* 상자가 wrapper 안에서 적절한 크기를 갖도록 설정 */
+            box-sizing: border-box; 
         }
 
         h1 {
@@ -77,15 +90,29 @@
 </head>
 <body>
 
-    <div class="container">
-        <h1>🎨 인공지능 수학</h1>
-        <p>원하는 기능을 클릭하여 실행하세요.</p>
+    <div class="tools-wrapper">
+        
+        <div class="container">
+            <h1>🎨 인공지능 수학</h1>
+            <p>원하는 기능을 클릭하여 실행하세요.</p>
 
-        <div class="menu-list">
-            <a href="1. handwriting.html" class="menu-link" target="_blank">1. 손글씨(숫자)인식</a>
-            <a href="2. RGBmatrix.html" class="menu-link" target="_blank">2. 픽셀 에디터 & RGB 행렬 추출</a>
-            <a href="3. Imageblender.html" class="menu-link" target="_blank">3. 이미지 블렌더</a>
+            <div class="menu-list">
+                <a href="1. handwriting.html" class="menu-link" target="_blank">1. 손글씨(숫자)인식</a>
+                <a href="2. RGBmatrix.html" class="menu-link" target="_blank">2. 픽셀 에디터 & RGB 행렬 추출</a>
+                <a href="3. Imageblender.html" class="menu-link" target="_blank">3. 이미지 블렌더</a>
+            </div>
         </div>
+
+        <div class="container">
+            <h1>📈 업무 효율 UP!</h1>
+            <p>업무를 도와주는 편리한 도구 모음입니다.</p>
+
+            <div class="menu-list">
+                <a href="Print Student Score Reports.html" class="menu-link" target="_blank">1. 학생별 정오표 전체 출력</a>
+                <a href="Randomize order.html" class="menu-link" target="_blank">2. 랜덤 순서 뽑기</a>
+            </div>
+        </div>
+
     </div>
 
 </body>
