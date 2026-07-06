@@ -115,4 +115,182 @@
                 if (!json || json.length === 0) throw new Error("엑셀 파일에 데이터가 없습니다.");
 
                 let fileNameInfo = "개별성적표";
-                for (let i = 0; i < Math
+                for (let i = 0; i < Math.min(10, json.length); i++) {
+                    if (json[i]) {
+                        let rowStr = json[i].filter(c => String(c).trim() !== "").join(" ");
+                        if (rowStr.includes("학년도") && rowStr.includes("학기")) {
+                            fileNameInfo = rowStr.replace(/1차\s*정기시험/g, " ").replace(/:/g, "_").trim().replace(/\s+/g, "_");
+                            break;
+                        }
+                    }
+                }
+
+                let headerStartIdx = -1;
+                for (let i = 0; i < json.length; i++) {
+                    if (json[i]) {
+                        for(let j = 0; j < json[i].length; j++) {
+                            if (json[i][j] && (String(json[i][j]).includes("번호") || String(json[i][j]).includes("반/번호"))) {
+                                headerStartIdx = i; break;
+                            }
+                        }
+                        if (headerStartIdx !== -1) break;
+                    }
+                }
+
+                if (headerStartIdx === -1) {
+                    throw new Error("표에서 '반/번호' 항목을 찾지 못했습니다. 올바른 나이스 다운로드 파일인지 확인해주세요.");
+                }
+
+                const rawH1 = json[headerStartIdx];
+                const rawH2 = json[headerStartIdx + 1] || [];
+                const rawH3 = json[headerStartIdx + 2] || [];
+                const validCols = [];
+                const newScoreCols = []; 
+                
+                for(let c = 3; c < Math.max(rawH1.length, rawH2.length, rawH3.length); c++) {
+                    if (String(rawH1[c] || "").trim() !== "" || String(rawH2[c] || "").trim() !== "") {
+                        const headerText = String(rawH1[c]).replace(/\s/g, '');
+                        
+                        if (headerText === "기타점수") continue;
+
+                        validCols.push(c);
+                        if (["선택형점수", "서답형점수", "과목총점"].includes(headerText)) {
+                            newScoreCols.push(validCols.length + 2); 
+                        }
+                    }
+                }
+
+                // 💡 [수정] 어떤 환경에서도 잘리지 않도록 폰트 크기를 조금 더 줄여서 공간을 강제로 확보
+                let dynamicFontSize = 9.0;
+                if (validCols.length > 20) dynamicFontSize = 8.0;
+                if (validCols.length > 25) dynamicFontSize = 7.0;
+                if (validCols.length > 30) dynamicFontSize = 6.5;
+
+                const outputData = [];
+                const merges = [];
+                const rowBreaks = []; 
+                let currentRow = 0;
+
+                function createCell(val, isHeader) {
+                    return {
+                        v: val,
+                        s: {
+                            border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} },
+                            alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                            font: { bold: false, name: "맑은 고딕", sz: dynamicFontSize },
+                            fill: isHeader ? { fgColor: { rgb: "F2F2F2" } } : undefined
+                        }
+                    };
+                }
+
+                function buildRow(rawArr, isHeader, isStudentData = false) {
+                    let row = [];
+                    if(isHeader) {
+                        row.push(createCell("반/번호", true));
+                        row.push(createCell("", true));
+                        row.push(createCell("성명", true)); 
+                    } else {
+                        row.push(createCell(rawArr[1] || "", false)); 
+                        row.push(createCell("", false));              
+                        row.push(createCell(rawArr[2] || "", false)); 
+                    }
+                    
+                    validCols.forEach((origIdx, i) => {
+                        let val = rawArr[origIdx];
+                        const isScoreCol = newScoreCols.includes(i + 3);
+
+                        if (isHeader && isScoreCol && val) {
+                            const cleanVal = String(val).replace(/\s/g, '');
+                            if (cleanVal === '선택형점수') val = '선택형\n점수';
+                            if (cleanVal === '서답형점수') val = '서답형\n점수';
+                            if (cleanVal === '과목총점') val = '과목\n총점';
+                        }
+
+                        if (isStudentData && isScoreCol) {
+                            if (val === undefined || val === null || String(val).trim() === "") {
+                                val = 0;
+                            }
+                        }
+                        row.push(createCell(val !== undefined ? val : "", isHeader));
+                    });
+                    return row;
+                }
+
+                let studentCount = 0; 
+                for (let i = headerStartIdx + 3; i < json.length; i++) {
+                    const rawStudent = json[i];
+                    if (!rawStudent || !rawStudent[2] || String(rawStudent[2]).trim() === "") continue;
+
+                    outputData.push(buildRow(rawH1, true));
+                    outputData.push(buildRow(rawH2, true));
+                    outputData.push(buildRow(rawH3, true));
+                    outputData.push(buildRow(rawStudent, false, true));
+
+                    merges.push({s: {r: currentRow, c: 0}, e: {r: currentRow+2, c: 1}});
+                    merges.push({s: {r: currentRow, c: 2}, e: {r: currentRow+2, c: 2}});
+                    merges.push({s: {r: currentRow+3, c: 0}, e: {r: currentRow+3, c: 1}}); 
+                    
+                    newScoreCols.forEach(colIdx => {
+                        merges.push({s: {r: currentRow, c: colIdx}, e: {r: currentRow+2, c: colIdx}});
+                    });
+
+                    currentRow += 4;
+                    outputData.push([]); 
+                    currentRow += 1;
+                    
+                    studentCount++; 
+                    
+                    // 10명마다 페이지 자르기
+                    if (studentCount % 10 === 0) {
+                        rowBreaks.push(currentRow - 1); 
+                    }
+                }
+
+                const newWorksheet = XLSX.utils.aoa_to_sheet(outputData);
+                newWorksheet['!merges'] = merges;
+                newWorksheet['!rowBreaks'] = rowBreaks; 
+
+                // 💡 [수정] 한셀이나 구버전 엑셀에서 프로그램이 크기 조절을 무시해도 아예 물리적 너비가 A4에 맞도록 (기존 82 -> 72로 대폭 축소)
+                const targetTotalWch = 72; 
+                const fixedWch = 1.2 + 1.2 + 5.0; // 이름 및 번호열 폭 축소
+                const scoreWchTotal = newScoreCols.length * 4.0; // 점수열 폭 축소
+                const remainingWch = targetTotalWch - fixedWch - scoreWchTotal;
+                const qCount = validCols.length - newScoreCols.length;
+                const qWch = Math.max(1.2, remainingWch / qCount); 
+
+                let colWidths = [{wch: 1.2}, {wch: 1.2}, {wch: 5.0}]; 
+                validCols.forEach((_, i) => {
+                    const isScore = newScoreCols.includes(i + 3);
+                    colWidths.push({ wch: isScore ? 4.0 : qWch }); 
+                });
+                newWorksheet['!cols'] = colWidths;
+                
+                // 💡 [수정] 좌우 여백을 최소치인 0.2로 세팅하여 공간 최대로 활용
+                newWorksheet['!margins'] = { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0, footer: 0 };
+                
+                // 💡 [수정] 높이 맞춤(fitToHeight)을 0이 아닌 999로 설정하여 엑셀 오류 방지 및 A4 사이즈 지정(paperSize: 9)
+                newWorksheet['!sheetPr'] = { pageSetUpPr: { fitToPage: true, autoPageBreaks: true } };
+                newWorksheet['!pageSetup'] = { 
+                    paperSize: 9, 
+                    orientation: 'portrait', 
+                    fitToPage: true, 
+                    fitToWidth: 1, 
+                    fitToHeight: 999 
+                }; 
+
+                const newWorkbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, "성적표");
+                
+                const finalFileName = `${fileNameInfo}_개별정오표_최종.xlsx`;
+                XLSX.writeFile(newWorkbook, finalFileName);
+                
+                statusDiv.innerHTML = `<span style='color: green;'>✅ 성공! <br><b>${finalFileName}</b> 파일이 저장되었습니다.</span>`;
+            } catch (error) {
+                console.error(error);
+                alert("🚨 조립 과정 중 오류가 발생했습니다: \n" + error.message);
+                statusDiv.innerHTML = `<span style='color: red;'>❌ 조립 실패: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
