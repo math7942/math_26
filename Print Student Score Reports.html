@@ -175,7 +175,6 @@
                         s: {
                             border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} },
                             alignment: { horizontal: "center", vertical: "center", wrapText: true },
-                            // 💡 [수정] 굵은 글씨 해제 (bold: false 로 고정)
                             font: { bold: false, name: "맑은 고딕", sz: dynamicFontSize },
                             fill: isHeader ? { fgColor: { rgb: "F2F2F2" } } : undefined
                         }
@@ -215,6 +214,7 @@
                     return row;
                 }
 
+                let studentCount = 0; // 💡 [수정] 학생 수 카운트 변수 추가
                 for (let i = headerStartIdx + 3; i < json.length; i++) {
                     const rawStudent = json[i];
                     if (!rawStudent || !rawStudent[2] || String(rawStudent[2]).trim() === "") continue;
@@ -236,14 +236,18 @@
                     outputData.push([]); 
                     currentRow += 1;
                     
-                    rowBreaks.push(currentRow - 1); 
+                    studentCount++; // 💡 [수정] 학생 수 증가시킴
+                    
+                    // 💡 [수정] 매 학생마다 페이지를 자르지 않고, 10명째가 될 때마다 페이지 브레이크 삽입
+                    if (studentCount % 10 === 0) {
+                        rowBreaks.push(currentRow - 1); 
+                    }
                 }
 
                 const newWorksheet = XLSX.utils.aoa_to_sheet(outputData);
                 newWorksheet['!merges'] = merges;
                 newWorksheet['!rowBreaks'] = rowBreaks; 
 
-                // 💡 [수정] 반/번호 너비를 1.5로 더 줄이고, 성명 너비를 5.5로 넉넉하게 늘림
                 const targetTotalWch = 82; 
                 const fixedWch = 1.5 + 1.5 + 5.5; 
                 const scoreWchTotal = newScoreCols.length * 4.5; 
@@ -251,7 +255,6 @@
                 const qCount = validCols.length - newScoreCols.length;
                 const qWch = Math.max(1.5, remainingWch / qCount);
 
-                // 💡 [수정] 적용된 열 너비 배열 (1.5, 1.5, 5.5)
                 let colWidths = [{wch: 1.5}, {wch: 1.5}, {wch: 5.5}]; 
                 validCols.forEach((_, i) => {
                     const isScore = newScoreCols.includes(i + 3);
@@ -260,7 +263,10 @@
                 newWorksheet['!cols'] = colWidths;
                 
                 newWorksheet['!margins'] = { left: 0.3, right: 0.3, top: 0.5, bottom: 0.5 };
-                newWorksheet['!pageSetup'] = { fitToPage: false, orientation: 'portrait', scale: 100 }; 
+                
+                // 💡 [수정] 인쇄 시 가로가 잘리지 않도록 '한 페이지에 모든 열 맞추기' 옵션 활성화
+                newWorksheet['!sheetPr'] = { pageSetUpPr: { fitToPage: true } };
+                newWorksheet['!pageSetup'] = { fitToPage: true, fitToWidth: 1, fitToHeight: 0, orientation: 'portrait' }; 
 
                 const newWorkbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, "성적표");
