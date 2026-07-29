@@ -18,26 +18,26 @@
             padding: 20px;
         }
 
-        /* 두 상자를 가로로 묶어주는 래퍼(Wrapper) 스타일 추가 */
+        /* 세 상자를 가로로 나란히 묶어주는 래퍼(Wrapper) 스타일 */
         .tools-wrapper {
             display: flex;
-            gap: 40px; /* 두 상자 사이의 간격 */
+            gap: 30px; /* 상자 사이의 간격 */
             justify-content: center;
             align-items: flex-start;
             flex-wrap: wrap; /* 화면이 좁아지면 자동으로 아래로 내려가게 함 */
             width: 100%;
-            max-width: 1100px; /* 너무 넓어지지 않게 최대 너비 설정 */
+            max-width: 1300px; /* 3개가 한 줄에 넉넉히 들어갈 수 있도록 최대 너비 확장 */
         }
 
         .container {
             background: white;
-            padding: 50px 40px;
+            padding: 40px 30px; /* 3개 배치를 위해 내부 여백 약간 축소 */
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             text-align: center;
-            max-width: 500px;
+            flex: 1 1 300px; /* 화면이 넓을 땐 나란히, 모바일처럼 좁을 땐 세로로 유연하게 크기 조정 */
+            max-width: 400px; /* 상자 하나의 최대 크기를 줄여서 3개가 잘 맞게 함 */
             width: 100%;
-            /* 상자가 wrapper 안에서 적절한 크기를 갖도록 설정 */
             box-sizing: border-box; 
         }
 
